@@ -51,19 +51,34 @@ class AirQualityCard extends HTMLElement {
     this.dispatchEvent(event);
   }
 
-  _getUaqiInfo(score) {
-    if (score >= 80) return { label: 'Excellent', color: '#34d399' };
-    if (score >= 60) return { label: 'Good', color: '#2dd4bf' };
-    if (score >= 40) return { label: 'Moderate', color: '#fbbf24' };
-    if (score >= 20) return { label: 'Low', color: '#fb923c' };
-    return { label: 'Poor', color: '#ff453a' };
+  _getUaqiInfo(score, isDark = true) {
+    if (isDark) {
+      if (score >= 80) return { label: 'Excellent', color: '#34d399' };
+      if (score >= 60) return { label: 'Good', color: '#2dd4bf' };
+      if (score >= 40) return { label: 'Moderate', color: '#fbbf24' };
+      if (score >= 20) return { label: 'Low', color: '#fb923c' };
+      return { label: 'Poor', color: '#ff453a' };
+    } else {
+      if (score >= 80) return { label: 'Excellent', color: '#059669' };
+      if (score >= 60) return { label: 'Good', color: '#0d9488' };
+      if (score >= 40) return { label: 'Moderate', color: '#d97706' };
+      if (score >= 20) return { label: 'Low', color: '#ea580c' };
+      return { label: 'Poor', color: '#dc2626' };
+    }
   }
 
-  _getAqhiInfo(val) {
-    if (val <= 3) return { label: 'Low Risk', color: '#38bdf8' };
-    if (val <= 6) return { label: 'Moderate', color: '#fbbf24' };
-    if (val <= 10) return { label: 'High Risk', color: '#ff453a' };
-    return { label: 'Very High', color: '#c084fc' };
+  _getAqhiInfo(val, isDark = true) {
+    if (isDark) {
+      if (val <= 3) return { label: 'Low Risk', color: '#38bdf8' };
+      if (val <= 6) return { label: 'Moderate', color: '#fbbf24' };
+      if (val <= 10) return { label: 'High Risk', color: '#ff453a' };
+      return { label: 'Very High', color: '#c084fc' };
+    } else {
+      if (val <= 3) return { label: 'Low Risk', color: '#0284c7' };
+      if (val <= 6) return { label: 'Moderate', color: '#d97706' };
+      if (val <= 10) return { label: 'High Risk', color: '#dc2626' };
+      return { label: 'Very High', color: '#9333ea' };
+    }
   }
 
   _formatPollutant(raw) {
@@ -88,8 +103,52 @@ class AirQualityCard extends HTMLElement {
           display: block;
           --uaqi-color: #34d399;
           --aqhi-color: #38bdf8;
+          --tile-bg: var(--ha-card-background, var(--card-background-color, #1c1c1e));
+          --tile-border-base: rgba(255, 255, 255, 0.08);
+          --tile-shadow: var(--ha-card-box-shadow, none);
+          --text-primary: var(--primary-text-color, #ffffff);
+          --text-secondary: var(--secondary-text-color, rgba(255, 255, 255, 0.45));
+          --text-status: rgba(255, 255, 255, 0.82);
+          --pill-bg: rgba(255, 255, 255, 0.06);
+          --pill-color: rgba(255, 255, 255, 0.75);
+          --pill-border: transparent;
+          --bar-dot-border: #1c1c1e;
+          --bar-dot-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
         }
+
+        :host([light-mode]),
+        :host-context([data-theme="light"]),
+        :host-context(html.light) {
+          --tile-bg: var(--ha-card-background, var(--card-background-color, #ffffff));
+          --tile-border-base: rgba(0, 0, 0, 0.09);
+          --tile-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+          --text-primary: var(--primary-text-color, #0f172a);
+          --text-secondary: var(--secondary-text-color, #64748b);
+          --text-status: #334155;
+          --pill-bg: rgba(0, 0, 0, 0.05);
+          --pill-color: #475569;
+          --pill-border: rgba(0, 0, 0, 0.08);
+          --bar-dot-border: #0f172a;
+          --bar-dot-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+        }
+
+        @media (prefers-color-scheme: light) {
+          :host(:not([light-mode="false"])) {
+            --tile-bg: var(--ha-card-background, var(--card-background-color, #ffffff));
+            --tile-border-base: rgba(0, 0, 0, 0.09);
+            --tile-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+            --text-primary: var(--primary-text-color, #0f172a);
+            --text-secondary: var(--secondary-text-color, #64748b);
+            --text-status: #334155;
+            --pill-bg: rgba(0, 0, 0, 0.05);
+            --pill-color: #475569;
+            --pill-border: rgba(0, 0, 0, 0.08);
+            --bar-dot-border: #0f172a;
+            --bar-dot-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+          }
+        }
+
         .grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -97,19 +156,20 @@ class AirQualityCard extends HTMLElement {
         }
         .tile {
           position: relative;
-          background: var(--ha-card-background, var(--card-background-color, #1c1c1e));
+          background: var(--tile-bg);
           border-radius: var(--ha-card-border-radius, 16px);
           padding: 13px 14px 13px 14px;
           cursor: pointer;
           transition: transform 0.15s ease, border-color 0.2s ease;
           box-sizing: border-box;
           overflow: hidden;
+          box-shadow: var(--tile-shadow);
         }
         .tile.uaqi {
-          border: 1px solid color-mix(in srgb, var(--uaqi-color) 32%, rgba(255, 255, 255, 0.08));
+          border: 1px solid color-mix(in srgb, var(--uaqi-color) 32%, var(--tile-border-base));
         }
         .tile.aqhi {
-          border: 1px solid color-mix(in srgb, var(--aqhi-color) 32%, rgba(255, 255, 255, 0.08));
+          border: 1px solid color-mix(in srgb, var(--aqhi-color) 32%, var(--tile-border-base));
         }
         .tile:hover {
           transform: translateY(-1px);
@@ -136,8 +196,9 @@ class AirQualityCard extends HTMLElement {
           font-weight: 700;
           padding: 1.5px 7px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.75);
+          background: var(--pill-bg);
+          color: var(--pill-color);
+          border: 1px solid var(--pill-border);
           white-space: nowrap;
         }
         .val-row {
@@ -155,19 +216,19 @@ class AirQualityCard extends HTMLElement {
         .val {
           font-size: 24px;
           font-weight: 700;
-          color: #ffffff;
+          color: var(--text-primary);
           line-height: 1.1;
           letter-spacing: -0.5px;
         }
         .max {
           font-size: 12px;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.45);
+          color: var(--text-secondary);
         }
         .status {
           font-size: 12px;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.82);
+          color: var(--text-status);
           white-space: nowrap;
         }
         .bar-track {
@@ -189,9 +250,9 @@ class AirQualityCard extends HTMLElement {
           height: 11px;
           border-radius: 50%;
           background: #ffffff;
-          border: 2.5px solid #1c1c1e;
+          border: 2.5px solid var(--bar-dot-border);
           transform: translate(-50%, -50%);
-          box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+          box-shadow: var(--bar-dot-shadow);
           transition: left 0.4s ease;
         }
       </style>
@@ -243,6 +304,22 @@ class AirQualityCard extends HTMLElement {
   _update() {
     if (!this._hass || !this._config || !this._initialized) return;
 
+    let isDark = true;
+    if (this._config && this._config.theme_mode === 'light') {
+      isDark = false;
+    } else if (this._config && this._config.theme_mode === 'dark') {
+      isDark = true;
+    } else if (this._hass && this._hass.themes && typeof this._hass.themes.darkMode === 'boolean') {
+      isDark = this._hass.themes.darkMode;
+    } else if (typeof window !== 'undefined' && window.matchMedia) {
+      isDark = !window.matchMedia('(prefers-color-scheme: light)').matches;
+    }
+    if (isDark) {
+      this.removeAttribute('light-mode');
+    } else {
+      this.setAttribute('light-mode', '');
+    }
+
     const uaqiState = this._hass.states[this._config.uaqi_entity];
     const uaqiPollState = this._hass.states[this._config.uaqi_pollutant_entity];
     const aqhiState = this._hass.states[this._config.aqhi_entity];
@@ -254,8 +331,8 @@ class AirQualityCard extends HTMLElement {
     const rawAqhi = aqhiState ? parseFloat(aqhiState.state) : 1;
     const aqhi = Number.isFinite(rawAqhi) ? Math.max(1, rawAqhi) : 1;
 
-    const uaqiInfo = this._getUaqiInfo(uaqi);
-    const aqhiInfo = this._getAqhiInfo(aqhi);
+    const uaqiInfo = this._getUaqiInfo(uaqi, isDark);
+    const aqhiInfo = this._getAqhiInfo(aqhi, isDark);
 
     this.style.setProperty('--uaqi-color', uaqiInfo.color);
     this.style.setProperty('--aqhi-color', aqhiInfo.color);
